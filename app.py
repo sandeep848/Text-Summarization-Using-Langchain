@@ -6,12 +6,11 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import YoutubeLoader, UnstructuredURLLoader
 from yt_dlp import YoutubeDL
 
-# Configure Streamlit page
+
 st.set_page_config(page_title="Langchain: Summarize Text from YT or Website")
 st.title("Summarize Text from YouTube or Website using Langchain")
 st.subheader("Summarize URL")
 
-# Sidebar for API key and model selection
 with st.sidebar:
     groq_api_key = st.text_input("GROQ API KEY", type="password", value="")
     model_selection = st.selectbox(
@@ -26,7 +25,7 @@ with st.sidebar:
         ],
     )
 
-# Set up the LLM and prompt
+
 llm = ChatGroq(model=model_selection, groq_api_key=groq_api_key)
 prompt_template = """
 Provide a summary of the following content in 300 words:
@@ -34,16 +33,14 @@ content: {text}
 """
 prompt = PromptTemplate(template=prompt_template, input_variables=["text"])
 
-# Input URL
 url = st.text_input("Enter a URL (YouTube or website):", label_visibility="collapsed")
 
-# Function to fetch YouTube data using yt_dlp
 def fetch_youtube_data(url):
     with YoutubeDL({'format': 'bestaudio'}) as ydl:
         info = ydl.extract_info(url, download=False)
     return info.get("title", ""), info.get("description", ""), info.get("url", "")
 
-# Button to trigger summarization
+
 if st.button("Summarize"):
     if not groq_api_key or not url.strip():
         st.error("Please enter both the GROQ API KEY and a valid URL.")
@@ -52,7 +49,6 @@ if st.button("Summarize"):
     else:
         try:
             with st.spinner("Processing..."):
-                # Load content based on URL type
                 if "youtube.com" in url or "youtu.be" in url:
                     try:
                         title, description, _ = fetch_youtube_data(url)
@@ -73,12 +69,9 @@ if st.button("Summarize"):
                     )
 
                 if loader:
-                    # Load documents and summarize
                     docs = loader.load()
                     chain = load_summarize_chain(llm, chain_type="stuff", prompt=prompt)
                     output = chain.run(docs)
-
-                    # Display the summary
                     st.success("Summary:")
                     st.write(output)
 
